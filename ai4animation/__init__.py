@@ -43,6 +43,7 @@ from .IK.FABRIK import FABRIK
 
 # Importer
 from .Import import BVHImporter
+from .Import.BVHImporter import BVH
 from .Import.FBXImporter import FBX
 from .Import.GLBImporter import GLB
 
@@ -94,6 +95,7 @@ __all__ = [
     # Import
     "GLB",
     "FBX",
+    "BVH",
     "BVHImporter",
     # AI
     "DataSampler",

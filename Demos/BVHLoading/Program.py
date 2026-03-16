@@ -1,75 +1,123 @@
-# # Copyright (c) Meta Platforms, Inc. and affiliates.
-# import os
-# import sys
-# from pathlib import Path
-# from ai4animation import (
-#     AI4Animation,
-#     Dataset,
-#     Motion,
-#     MotionEditor,
-#     Actor,
-#     Vector3,
-#     Time,
-#     Transform,
-#     BVHImporter
-# )
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+import os
+import sys
+from pathlib import Path
+from ai4animation import (
+    AI4Animation,
+    Actor,
+    Vector3,
+    Time,
+    Motion,
+    Transform
+)
 
-# SCRIPT_DIR = Path(__file__).parent
-# ASSETS_PATH = str(SCRIPT_DIR.parent / "_ASSETS_/Geno")
+SCRIPT_DIR = Path(__file__).parent
+ASSETS_PATH = str(SCRIPT_DIR.parent / "_ASSETS_/Geno")
 
-# sys.path.append(ASSETS_PATH)
-# import Definitions
+sys.path.append(ASSETS_PATH)
+import Definitions
 
-# sys.path.append(Path(__file__).parent)
+sys.path.append(Path(__file__).parent)
 
-# class Program:
-#     def __init__(self, filename):
-#         self.Filename = filename
+MOTION_FILE = "WalkingStickLeft_BR"
 
-#     def Start(self):
-#         bvh_motion = BVHImporter.LoadMotion(
-#             self.Filename
-#         )
-#         self.Motion = bvh_motion
-#         print(self.Motion.Hierarchy.BoneNames)
-#         self.Mirror = False
-#         self.Pose = None
+class Program:
+    def __init__(self, filename):
+        self.Filename = filename
 
-#         entity = AI4Animation.Scene.AddEntity("Actor")
-#         model_path = os.path.join(ASSETS_PATH, "Model.fbx")
-#         self.Actor = entity.AddComponent(
-#             Actor, model_path, Definitions.FULL_BODY_NAMES
-#         )
-#         self.Actor.Entity.SetPosition(Vector3.Create(0, 0, 0))
+    def Start(self):
+        bvh_path = os.path.join(str(SCRIPT_DIR), self.Filename + ".bvh")
+        # fbx_path = os.path.join(str(SCRIPT_DIR), self.Filename + ".fbx")
+        # npz_path = os.path.join(str(SCRIPT_DIR), self.Filename + ".npz")
+        model_path = os.path.join(ASSETS_PATH, "Model.fbx")
 
-#     def Standalone(self):
-#         AI4Animation.Standalone.Camera.SetTarget(self.Actor.Entity)
+        self.BVHMotion = Motion.LoadFromBVH(bvh_path, scale=0.01)
+        # self.FBXMotion = Motion.LoadFromFBX(fbx_path)
+        # self.NPZMotion = Motion.LoadFromNPZ(npz_path)
+        self.BVHMotion.Debug()
+        # self.FBXMotion.Debug()
+        # self.NPZMotion.Debug()
 
-#     def Update(self):
-#         timestamp = Time.TotalTime % self.Motion.TotalTime # [0]
-#         self.Pose = self.Motion.GetBoneTransformations(
-#             timestamps=timestamp, mirrored=self.Mirror
-#         )
-#         self.Actor.SetTransforms(
-#             self.Motion.GetBoneTransformations(
-#                 timestamps=timestamp,
-#                 bone_names_or_indices=self.Actor.GetBoneNames(),
-#                 mirrored=self.Mirror,
-#             )
-#         )
-#         self.Actor.SyncToScene()
+        self.Mirror = False
 
-#     def GUI(self):
-#         positions = Transform.GetPosition(self.Pose).reshape(-1, 3)
-#         AI4Animation.Draw.Text3D(
-#             self.Motion.Hierarchy.BoneNames,
-#             positions,
-#             size=0.0125,
-#             color=AI4Animation.Color.BLACK,
-#         )
+        bvh_entity = AI4Animation.Scene.AddEntity("BVH Actor")
+        self.BVHActor = bvh_entity.AddComponent(
+            Actor, model_path, Definitions.FULL_BODY_NAMES
+        )
 
-#     def Draw(self):
-#         AI4Animation.Draw.Transform(self.Pose, size=0.25, axisSize=0)
+        # fbx_entity = AI4Animation.Scene.AddEntity("FBX Actor")
+        # self.FBXActor = fbx_entity.AddComponent(
+        #     Actor, model_path, Definitions.FULL_BODY_NAMES
+        # )
+
+        # npz_entity = AI4Animation.Scene.AddEntity("NPZ Actor")
+        # self.NPZActor = npz_entity.AddComponent(
+        #     Actor, model_path, Definitions.FULL_BODY_NAMES
+        # )
+
+        # self.FBXActor.SkinnedMesh.SetColor(AI4Animation.Color.RED)
+        # self.NPZActor.SkinnedMesh.SetColor(AI4Animation.Color.BLUE)
+
+    def Standalone(self):
+        AI4Animation.Standalone.Camera.SetTarget(self.BVHActor.Entity)
+
+    def Update(self):
+        bvh_timestamp = Time.TotalTime % self.BVHMotion.TotalTime
+        self.BVHActor.SetTransforms(
+            self.BVHMotion.GetBoneTransformations(
+                timestamps=bvh_timestamp,
+                bone_names_or_indices=self.BVHActor.GetBoneNames(),
+                mirrored=self.Mirror,
+            )
+        )
+        self.BVHActor.SyncToScene()
+
+        # fbx_timestamp = Time.TotalTime % self.FBXMotion.TotalTime
+        # self.FBXActor.SetTransforms(
+        #     Transform.TransformationFrom(
+        #         self.FBXMotion.GetBoneTransformations(
+        #             timestamps=fbx_timestamp,
+        #             bone_names_or_indices=self.FBXActor.GetBoneNames(),
+        #             mirrored=self.Mirror,
+        #         ),
+        #         Transform.T(Vector3.Create(1, 0, 0))
+        #     )
+        # )
+        # self.FBXActor.SyncToScene()
+
+        # npz_timestamp = Time.TotalTime % self.NPZMotion.TotalTime
+        # self.NPZActor.SetTransforms(
+        #     Transform.TransformationFrom(
+        #         self.NPZMotion.GetBoneTransformations(
+        #             timestamps=npz_timestamp,
+        #             bone_names_or_indices=self.NPZActor.GetBoneNames(),
+        #             mirrored=self.Mirror,
+        #         ),
+        #         Transform.T(Vector3.Create(2, 0, 0))
+        #     )
+        # )
+        # self.NPZActor.SyncToScene()
+
+    def GUI(self):
+        label_offset = Vector3.Create(0, 1, 0)
+        AI4Animation.Draw.Text3D(
+            ["BVH"],
+            self.BVHActor.GetBone(Definitions.HipName).GetPosition() + label_offset,
+            size=0.025,
+            color=AI4Animation.Color.BLACK,
+        )
+        # AI4Animation.Draw.Text3D(
+        #     ["FBX"],
+        #     self.FBXActor.GetBone(Definitions.HipName).GetPosition() + label_offset,
+        #     size=0.025,
+        #     color=AI4Animation.Color.BLACK,
+        # )
+        # AI4Animation.Draw.Text3D(
+        #     ["NPZ"],
+        #     self.NPZActor.GetBone(Definitions.HipName).GetPosition() + label_offset,
+        #     size=0.025,
+        #     color=AI4Animation.Color.BLACK,
+        # )
 
 
-# AI4Animation(Program("style100.bvh"))
+AI4Animation(Program(MOTION_FILE))

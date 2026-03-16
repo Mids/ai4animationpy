@@ -194,6 +194,15 @@ class Motion:
 
         return bone_names, Tensor.Mean(bone_lengths, axis=0)
 
+    def Debug(self):
+        print(f"=== Motion: {self.Name} ===")
+        print(f"Frames: {self.NumFrames}")
+        print(f"Joints: {self.NumJoints}")
+        print(f"Framerate: {self.Framerate:.2f} fps")
+        print(f"Duration: {self.TotalTime:.2f}s")
+        print(f"Frames shape: {self.Frames.shape}")
+        self.Hierarchy.Debug()
+
     # Asset Serialization
     def SaveToNPZ(self, absolute_path):
         directory = os.path.dirname(absolute_path)
@@ -255,6 +264,14 @@ class Motion:
         return GLB(absolute_path).LoadMotion(names=names, floor=floor)
 
     @classmethod
+    def LoadFromBVH(cls, absolute_path, scale=1.0, names=None, floor=None):
+        from ai4animation.Import.BVHImporter import BVH
+
+        if not os.path.isfile(absolute_path):
+            raise FileNotFoundError(f"BVH file not found: {absolute_path}")
+        return BVH(absolute_path, scale=scale).LoadMotion(names=names, floor=floor)
+
+    @classmethod
     def LoadFromFBX(cls, absolute_path, names=None, floor=None):
         from ai4animation.Import.FBXImporter import FBX
 
@@ -311,3 +328,10 @@ class Hierarchy:
 
     def IsRoot(self, index):
         return self.IsValidBoneIndex(index) and self.ParentIndices[index] == -1
+
+    def Debug(self):
+        print(f"=== Hierarchy ===")
+        print(f"Bones: {len(self.BoneNames)}")
+        for i, name in enumerate(self.BoneNames):
+            parent = self.ParentNames[i] if self.ParentNames[i] is not None else "None"
+            print(f"  [{i}] {name} (parent: {parent})")

@@ -11,9 +11,9 @@ from tqdm import tqdm
 
 
 class BatchConverter:
-    """Batch processor for converting GLB and FBX files to NPZ motion data"""
+    """Batch processor for converting GLB, FBX, and BVH files to NPZ motion data"""
 
-    SUPPORTED_EXTENSIONS = (".glb", ".fbx")
+    SUPPORTED_EXTENSIONS = (".glb", ".fbx", ".bvh")
 
     def __init__(
         self,
@@ -30,10 +30,10 @@ class BatchConverter:
         if not os.path.exists(input_directory):
             raise FileNotFoundError(f"Input directory not found: {input_directory}")
 
-    def Run(self, bone_names, floor) -> List[str]:
+    def Run(self, bone_names, floor, bvh_scale=1.0) -> List[str]:
         files = self.FindFiles()
         if not files:
-            print(f"No GLB or FBX files found in {self.input_directory}")
+            print(f"No GLB, FBX, or BVH files found in {self.input_directory}")
             return []
 
         output_paths = []
@@ -49,6 +49,7 @@ class BatchConverter:
                         self.output_directory,
                         bone_names,
                         floor,
+                        bvh_scale,
                     ),
                 ): file
                 for file in files
@@ -77,7 +78,7 @@ class BatchConverter:
         return output_paths
 
     def ProcessFile(self, args):
-        filename, input_directory, output_directory, bone_names, floor = args
+        filename, input_directory, output_directory, bone_names, floor, bvh_scale = args
         try:
             filepath = os.path.join(input_directory, filename)
             ext = os.path.splitext(filename)[1].lower()
@@ -86,6 +87,8 @@ class BatchConverter:
                 motion = Motion.LoadFromGLB(filepath, bone_names, floor)
             elif ext == ".fbx":
                 motion = Motion.LoadFromFBX(filepath, bone_names, floor)
+            elif ext == ".bvh":
+                motion = Motion.LoadFromBVH(filepath, scale=bvh_scale, names=bone_names, floor=floor)
             else:
                 raise ValueError(f"Unsupported file format: {ext}")
 
@@ -105,7 +108,7 @@ class BatchConverter:
             return (filename, None, False, str(e))
 
     def FindFiles(self) -> List[str]:
-        """Find all supported files (GLB and FBX) in the input directory."""
+        """Find all supported files (GLB, FBX, and BVH) in the input directory."""
         found_files = []
 
         for root, _, files in os.walk(self.input_directory):
@@ -126,34 +129,45 @@ class BatchConverter:
         """Find FBX files only."""
         return [f for f in self.FindFiles() if f.lower().endswith(".fbx")]
 
+    def FindBVHs(self) -> List[str]:
+        """Find BVH files only."""
+        return [f for f in self.FindFiles() if f.lower().endswith(".bvh")]
+
 
 def Run(
-    input_dir: str, output_dir: str = None, bone_names=None, floor=None
+    input_dir: str, output_dir: str = None, bone_names=None, floor=None, bvh_scale=1.0
 ) -> List[str]:
     converter = BatchConverter(
         input_dir, output_dir, max_workers=Utility.GetNumWorkers()
     )
-    return converter.Run(bone_names, floor)
+    return converter.Run(bone_names, floor, bvh_scale=bvh_scale)
 
 
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Batch convert GLB and FBX files to NPZ motion data", prog="convert"
+        description="Batch convert GLB, FBX, and BVH files to NPZ motion data", prog="convert"
     )
     parser.add_argument(
-        "--input_dir", required=True, help="Input directory containing GLB or FBX files"
+        "--input_dir", required=True, help="Input directory containing GLB/FBX/BVH files"
     )
     parser.add_argument(
         "--output_dir", help="Output directory for NPZ files (default: input_dir/NPZ)"
     )
     parser.add_argument(
         "--skeleton",
-        choices=["Cranberry"],
+        choices=["Cranberry", "Geno"],
         default="Cranberry",
         required=False,
-        help="Bone names to store (default: Cranberry)",
+        help="Skeleton definition to use for bone filtering (default: Cranberry)",
+    )
+
+    parser.add_argument(
+        "--bvh_scale",
+        type=float,
+        default=0.01,
+        help="Scale factor for BVH position data (e.g. 0.01 for centimeters)",
     )
 
     args = parser.parse_args()
@@ -199,8 +213,34 @@ def main():
             "b_r_wrist_twist",
             "b_r_wrist",
         ]
+    elif args.skeleton == "Geno":
+        bone_names = [
+            "Hips",
+            "LeftUpLeg",
+            "LeftLeg",
+            "LeftFoot",
+            "LeftToeBase",
+            "RightUpLeg",
+            "RightLeg",
+            "RightFoot",
+            "RightToeBase",
+            "Spine",
+            "Spine1",
+            "Spine2",
+            "Spine3",
+            "Neck",
+            "Head",
+            "LeftShoulder",
+            "LeftArm",
+            "LeftForeArm",
+            "LeftHand",
+            "RightShoulder",
+            "RightArm",
+            "RightForeArm",
+            "RightHand",
+        ]
 
-    Run(args.input_dir, output_dir, bone_names=bone_names, floor=floor)
+    Run(args.input_dir, output_dir, bone_names=bone_names, floor=floor, bvh_scale=args.bvh_scale)
     return 0
 
 

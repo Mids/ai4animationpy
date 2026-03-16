@@ -55,7 +55,7 @@ class Program:
 
 
 def main():
-    AI4Animation(Program("Motion.glb"))
+    AI4Animation(Program("cranberry.glb"))
 
 
 if __name__ == "__main__":

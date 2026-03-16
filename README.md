@@ -45,12 +45,6 @@ pip install onnxruntime
 pip install -e . --no-dependencies
 ```
 
-## Mocap Import
-The internal motion data format is .npz which stores 7 dimensions (3d position, 4d quaternion) for each skeleton joint per frame. Currently, the framework only provides a <a href="ai4animation/Import/GLBImporter.py">.glb importer </a> to convert to this format. For example:
-
-1. Download the <a href="https://starke-consult.de/AI4Animation/SIGGRAPH_2024/Cranberry_Dataset.zip">Cranberry Dataset</a>
-2. Run batch converter with `convert --input_dir <local_path_to_glb_files>`
-3. Use the <a href="Demos/MotionEditor//Program.py">MotionEditor</a> for visualizing the .npz data
 ## Why are we building this framework?
 Working on AI-driven character animation has required juggling multiple disconnected tools: model research happens in python while visualization requires game engines or specialized software, and bridging the two involves specialized communication pipelines. This creates friction that slows down iteration time and can make it difficult to validate results on-the-fly.
 
@@ -91,8 +85,25 @@ We believe having one framework for animation tooling in the community can provi
 - [x] Standalone, Headless, Manual mode for flexible runtime usage
 - [ ] Physics simulation (adding rigid bodies and/or collision checking)
 - [ ] Path planning and spline tooling in 3D environments
-- [ ] IO: FBX / geometry import
+- [x] IO: FBX / geometry import
 - [ ] Audio support
+
+## Motion Capture Import
+Currently, the framework supports importing mesh, skin and animation data from GLB, FBX, and BVH files. Demos are provided how to load character model and motion data from these formats and how to visualize them.
+The internal motion data format is .npz which stores 7 dimensions (3d position, 4d quaternion) for each skeleton joint per frame. To convert to this format simply run `convert -h` using the <a href="ai4animation/Import//BatchConverter.py">batch converter.</a> Afterwards, use the <a href="Demos/MotionEditor//Program.py">MotionEditor</a> for visualizing the .npz data.
+
+### Public Datasets (selected)
+
+| Name | Character Model| Download |
+|------|-----------|----------|
+| <a href="https://github.com/sebastianstarke/AI4Animation"> Cranberry </a>| Cranberry | <a href="https://starke-consult.de/AI4Animation/SIGGRAPH_2024/Cranberry_Dataset.zip">FBX&GLB</a> |
+| <a href="https://github.com/orangeduck/100style-retarget"> 100Style retargeted </a>| Geno | <a href="https://theorangeduck.com/media/uploads/Geno/100style-retarget/bvh.zip">BVH</a> & <a href="https://theorangeduck.com/media/uploads/Geno/100style-retarget/fbx.zip">FBX</a> |
+| <a href="https://github.com/ubisoft/ubisoft-laforge-animation-dataset"> LaFan </a>| Ubisoft LaFan | <a href="https://github.com/ubisoft/ubisoft-laforge-animation-dataset/blob/master/lafan1/lafan1.zip">BVH</a> |
+| <a href="https://github.com/orangeduck/lafan1-resolved"> LaFan resolved </a>| Geno | <a href="https://theorangeduck.com/media/uploads/Geno/lafan1-resolved/bvh.zip">BVH</a> & <a href="https://theorangeduck.com/media/uploads/Geno/lafan1-resolved/fbx.zip">FBX</a> |
+| <a href="https://github.com/orangeduck/zeroeggs-retarget"> ZeroEggs retargeted </a>| Geno | <a href="https://theorangeduck.com/media/uploads/Geno/zeroeggs-retarget/bvh.zip">BVH</a> & <a href="https://theorangeduck.com/media/uploads/Geno/zeroeggs-retarget/fbx.zip">FBX</a> |
+| <a href="https://github.com/orangeduck/motorica-retarget"> Motorica retargeted </a>| Geno | <a href="https://theorangeduck.com/media/uploads/Geno/motorica-retarget/bvh.zip">BVH</a> & <a href="https://theorangeduck.com/media/uploads/Geno/motorica-retarget/fbx.zip">FBX</a> |
+| <a href="https://github.com/sebastianstarke/AI4Animation/tree/master/AI4Animation/SIGGRAPH_Asia_2019"> NSM </a>| Anubis | <a href="https://starke-consult.de/AI4Animation/SIGGRAPH_Asia_2019/MotionCapture.zip">BVH</a> |
+| <a href="https://github.com/sebastianstarke/AI4Animation/tree/master/AI4Animation/SIGGRAPH_2018"> MANN </a>| Dog | <a href="https://starke-consult.de/AI4Animation/SIGGRAPH_2018/MotionCapture.zip">BVH</a> |
 
 ## Copyright Information
 

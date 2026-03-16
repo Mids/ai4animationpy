@@ -71,4 +71,4 @@ class Program:
     # def Draw(self):
     #     AI4Animation.Draw.Transform(self.Pose, size=0.25, axisSize=0)
 
-AI4Animation(Program("lafan.fbx"))
+AI4Animation(Program("geno.fbx"))
