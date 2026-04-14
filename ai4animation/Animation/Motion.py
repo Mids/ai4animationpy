@@ -24,7 +24,7 @@ class Motion:
         self.Correction = Rotation.Euler(Vector3.Zero(len(hierarchy.BoneNames)))
         for i, sym_idx in enumerate(self.Symmetry):
             self.Correction[i : i + 1] = (
-                Rotation.Euler(0, 0, 0) if sym_idx != i else Rotation.Euler(0, 0, 0)
+                Rotation.Euler(0, 0, 180) if sym_idx != i else Rotation.Euler(0, 0, 0)
             )
         self.NeedsCorrection: bool = not Tensor.All(
             self.Correction == Rotation.Euler(0, 0, 0)
