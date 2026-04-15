@@ -47,6 +47,13 @@ def Clamp(value, min, max):
     return value
 
 
+def SmoothStep(x, threshold, power):
+    x = np.clip(x, 0, 1)
+    t = np.clip((x - threshold) / (1 - threshold), 0, 1)
+    smoothed = 3 * t**2 - 2 * t**3
+    return np.power(smoothed, power)
+
+
 def ClampArray(values, min, max):
     for i in range(len(values)):
         values[i] = Clamp(values[i], min, max)

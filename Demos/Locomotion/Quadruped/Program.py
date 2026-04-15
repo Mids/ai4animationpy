@@ -64,12 +64,6 @@ CHARACTER_MODELS = {
     "wolf": "Wolf.glb",
 }
 
-def smoothstep(x, threshold, power):
-    x = np.clip(x, 0, 1)
-    t = np.clip((x - threshold) / (1 - threshold), 0, 1)
-    smoothed = 3 * t**2 - 2 * t**3
-    return np.power(smoothed, power)
-
 class Program:
     def __init__(self):
         self.Character = "dog"
@@ -312,7 +306,8 @@ class Program:
 
         # Smooth target speed with PID and clamp to valid locomotion range
         speed = current_speed + self.PID(current_speed, Time.DeltaTime, setpoint=target_speed)
-        speed = Tensor.Clamp(speed, 0.0, LOCOMOTION_MODES["canter"])
+        # speed = Tensor.Clamp(speed, 0.0, LOCOMOTION_MODES["canter"])
+        speed = max(speed, 0.0)
 
         # Build movement direction from camera-relative input
         move_vector = Vector3.ClampMagnitude(
@@ -470,7 +465,7 @@ class Program:
         )
 
         raw_contacts = outputs.Read(4)
-        futureContacts = smoothstep(raw_contacts, CONTACT_THRESHOLD, CONTACT_POWER)
+        futureContacts = Utility.SmoothStep(raw_contacts, CONTACT_THRESHOLD, CONTACT_POWER)
 
         futureGuidances = outputs.ReadVector3(self.Actor.GetBoneCount())
 
@@ -544,7 +539,7 @@ class Program:
         self.Actor.Root = Transform.Interpolate(
             root, self.Actor.Root, self.Sequence.GetRootLock()
         )
-        
+
         self.Actor.SetTransforms(
             Transform.TR(
                 Vector3.Lerp(
@@ -772,7 +767,7 @@ class Program:
             backgroundColor=Utility.Opacity(AI4Animation.Color.BLACK, 0.4),
             frameColor=AI4Animation.Color.WHITE,
         )
-        
+
 
         # self.SliderKp.GUI()
         # self.SliderKi.GUI()

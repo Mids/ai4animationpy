@@ -28,6 +28,7 @@ from ai4animation import (
     TimeSeries,
     Transform,
     Vector3,
+    Utility
 )
 from LegIK import LegIK
 from Sequence import Sequence
@@ -40,6 +41,8 @@ SEQUENCE_WINDOW = 0.5
 SEQUENCE_LENGTH = 16
 SEQUENCE_FPS = 30
 PREDICTION_FPS = 10
+CONTACT_POWER = 3.0
+CONTACT_THRESHOLD = 2.0 / 3.0
 
 # The locomotion system was trained on the Style100 dataset.
 
@@ -319,7 +322,8 @@ class Program:
             futureRootTransforms.reshape(SEQUENCE_LENGTH, 1, 4, 4),
         )
 
-        futureContacts = Tensor.Pow(Tensor.Clamp(outputs.Read(4), 0, 1), 1.0)
+        raw_contacts = outputs.Read(4)
+        futureContacts = Utility.SmoothStep(raw_contacts, CONTACT_THRESHOLD, CONTACT_POWER)
 
         futureGuidances = outputs.ReadVector3(self.Actor.GetBoneCount())
 
@@ -411,12 +415,22 @@ class Program:
             ballContact=contacts[1],
             maxIterations=self.SolverIterations,
             maxAccuracy=self.SolverAccuracy,
+            poleTarget=Vector3.PositionFrom(
+                Vector3.Create(0.0, 0.0, 1.0),
+                self.Actor.GetBone(Definitions.LeftKneeName).GetTransform(),
+            ),
+            poleWeight=1.0,
         )
         self.RightLegIK.Solve(
             ankleContact=contacts[2],
             ballContact=contacts[3],
             maxIterations=self.SolverIterations,
             maxAccuracy=self.SolverAccuracy,
+            poleTarget=Vector3.PositionFrom(
+                Vector3.Create(0.0, 0.0, 1.0),
+                self.Actor.GetBone(Definitions.RightKneeName).GetTransform(),
+            ),
+            poleWeight=1.0,
         )
 
         self.Actor.SyncToScene()

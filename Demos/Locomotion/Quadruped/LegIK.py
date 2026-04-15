@@ -20,23 +20,10 @@ class LegIK:
         maxAccuracy: float,
     ):
 
-        locked_pos = self.TargetPosition.copy()
-        locked_pos[..., 1] = max(
-            Vector3.Lerp(locked_pos[..., 1], self.EEBaseline, contact),
-            self.EEBaseline,
-        )
-
         self.TargetPosition = Vector3.Lerp(
-            self.IK.LastBone().GetPosition(), locked_pos, contact
+            self.IK.LastBone().GetPosition(), self.TargetPosition, contact
         )
-
-        self.TargetRotation = Rotation.Interpolate(
-            self.IK.LastBone().GetRotation(),
-            self.TargetRotation,
-            0.5 * contact,
-        )
-        # self.TargetRotation = self.IK.LastBone().GetRotation()
-
+        self.TargetRotation = self.IK.LastBone().GetRotation()
         self.IK.Solve(
             self.TargetPosition,
             self.TargetRotation,
